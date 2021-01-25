@@ -1,0 +1,106 @@
+a) create table customer
+(
+c_id varchar(10),
+name varchar(10),
+constraint pk71 primary key(c_id)
+);
+create table account
+(
+acc_no number(10),
+type varchar(10),
+balance number(100000),
+constraint pk72 primary key(acc_no)
+);
+
+create table cust_acc
+(
+c_id varchar(10),
+acc_no number(10),
+last_tr date,
+constraint pk73 primary key(c_id,acc_no),
+constraint fk71 foreign key(c_id) references customer(c_id),
+constraint fk72 foreign key(acc_no) references account(acc_no)
+);
+
+create table address
+(
+c_id varchar(10),
+street varchar(20),
+city varchar(20),
+state varchar(20),
+constraint pk74 primary key(c_id,street,city,state)
+);
+
+b)
+insert into customer values('c1111','alex');
+insert into customer values('c1112','john');
+insert into customer values('c1113','steve');
+insert into customer values('c1114','robert');
+insert into account values(2001,'savings','8000');
+insert into account values(2002,'RD','9000');
+insert into account values(2003,'joint','20000');
+insert into cust_acc values('c1111',2003,'20-jan-2011');
+insert into cust_acc values('c1112',2003,'12-feb-2011');
+insert into cust_acc values('c1113',2003,'13-jan-2011');
+insert into cust_acc values('c1114',2003,'20-mar-2011');
+insert into cust_acc values('c1111',2001,'20-dec-2011');
+insert into address values('c1111','fsfsf','ccxx','hghg');
+insert into address values('c1111','fsfcc','ccqwq','hgcxhg');
+c)
+update account
+set balance=case
+when balance<=10000 then balance*1.05
+else balance*1.06
+end;
+d)
+select max(distinct(count(acc_no)))
+from account
+group by acc_no;
+e)
+create or replace trigger last_trans
+before insert on cust_acc
+for each row
+declare
+cur_date date;
+begin
+select sysdate into cur_date from dual;
+if((:NEW.last_tr-cur_date)<=0) then
+raise_application_error(-20006,'INVALID DATE');
+end if;
+end;
+f)
+create or replace procedure pr7 is
+X customer%rowtype;
+
+cursor c is select ca.c_id, cu.name, count(ca.acc_no) from customer cu, cust_acc ca
+where ca.c_id=cu.c_id group by ca.c_id, cu.name
+having count(ca.acc_no) >= all(select count(ca.acc_no) from cust_acc ca group by ca.c_id);
+
+cursor f is select cu.c_id, cu.name from customer cu, account a, cust_acc ca
+where cu.c_id=ca.c_id and a.acc_no=ca.acc_no and a.balance in (select min(balance) from account);
+
+cursor g is select c_id, name from customer where c_id in (
+select * from (
+select cu.c_id from customer cu, account a, cust_acc ca 
+where cu.c_id=ca.c_id and a.acc_no=ca.acc_no and a.type='joint'
+                group by cu.c_id 
+                order by count(cu.c_id) desc
+            ) where rownum=1
+        );
+
+
+    begin
+        dbms_output.put_line('CUSTOMER DETAILS WITH MAX ACCOUNTS');
+        for X in c loop
+            dbms_output.put_line(X.c_id||'    '||X.name);
+        end loop;
+        dbms_output.put_line('CUSTOMER DETAILS WITH LOWEST BALANCE');
+        for X in f loop
+            dbms_output.put_line(X.c_id||'    '||X.name);
+        end loop;
+        dbms_output.put_line('CUSTOMER DETAILS WITH MOST JOINT ACCOUNT');
+        for X in g loop
+            dbms_output.put_line(X.c_id||'    '||X.name);
+ end loop;
+ end;
+/
