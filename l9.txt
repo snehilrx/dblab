@@ -1,0 +1,88 @@
+create table order1(
+orderid varchar(10),
+constraint order_pk primary key(orderid)
+);
+
+create table book(
+bid varchar(10),
+btitle varchar(10),
+byop number,
+aid varchar(10),
+pid varchar(10),
+constraint book_pk primary key(bid),
+constraint book_fk1 foreign key(aid) references author(aid),
+constraint book_fk2 foreign key(pid) references publisher(pid)
+);
+
+create table author(
+aid varchar(10),
+aname varchar(10),
+acity varchar(10),
+acountry varchar(10),
+constraint author_pk primary key(aid)
+);
+
+create table publisher(
+pid varchar(10),
+pname varchar(10),
+pcity varchar(10),
+pcountry varchar(10),
+constraint publisher_pk primary key(pid)
+);
+
+create table order_book(
+orderid varchar(10),
+bid varchar(10),
+constraint ob_pk primary key(orderid,bid),
+constraint ob_fk1 foreign key(bid) references book(bid),
+constraint ob_fk2 foreign key(orderid) references order1(orderid)
+);
+
+insert into order1 values('1');
+insert into order1 values('2');
+insert into book values('1','abc','2001','1','1');
+insert into book values('2','xyz','2001','1','1');
+insert into book values('3','mno','2001','2','1');
+insert into author values('1','a','b','c');
+insert into author values('2','a','b','c');
+insert into publisher values('1','a','b','c');
+insert into order_book values('1','1');
+
+select a.aname,b.aid,count(b.bid)
+from author a,book b
+where a.aid=b.aid
+group by a.aname,b.aid
+having count(b.bid)>=all(select count(b.bid)
+from book b
+group by b.aid);
+
+select btitle
+from book
+where byop='2001' and pid='1';
+
+create or replace trigger tr9
+before insert on book
+for each row
+declare
+cur number;
+begin
+select to_char(sysdate,'YYYY')into cur
+from dual;
+if(:NEW.byop!=cur) then
+raise_application_error(-20019,'Cannot insert');
+end if;
+end;
+/
+
+create or replace procedure pr9(year number,name varchar)
+is
+X book%rowtype;
+cursor c is select b.* from book b,author a where a.aname=name and b.byop=year and
+a.aid=b.aid;
+begin
+sys.dbms_output.put_line('BOOK DETAILS');
+for X in c loop
+sys.dbms_output.put_line(X.bid||' '||X.btitle||' '||X.byop);
+end loop;
+end;
+/

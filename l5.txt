@@ -1,0 +1,78 @@
+create table ownerofdog
+(
+oname varchar(10),
+ssn number(10),
+address varchar(30),
+constraint pk1 primary key(ssn));
+
+create table doggg
+(
+ssn number(10),
+dname varchar(10),
+sex varchar(5),
+dop date,
+constraint pk2 primary key(ssn,dname),
+constraint fk1 foreign key(ssn) references ownerofdog(ssn));
+
+insert into ownerofdog values('james',1234,'xyz');
+insert into ownerofdog values('manoj',1235,'pqr');
+insert into ownerofdog values('monika',1236,'yrs');
+insert into ownerofdog values('gunda',1237,'rti ');
+insert into ownerofdog values('harsh',1238,'rjs');
+insert into ownerofdog values('Abhiman',1239,'stf');
+insert into doggg values (1234,'ab','M','10-jan-2010');
+insert into doggg values(1234,'bc','F','10-jan-2010');
+insert into doggg values(1235,'de','M','20-feb-2009');
+insert into doggg values(1236,'ef','F','21-mar-2010');
+insert into doggg values(1237,'jp','F','22-mar-2010');
+insert into doggg values(1239,'gh','M','09-jan-2010');
+insert into doggg values(1239,'fu','F','10-jan-2011');
+to check trigger
+insert into doggg values(1239,'gr','F','12-jan-2011');
+insert into doggg values(1239,'ks','M','14-jan-2012');
+insert into doggg values (1234,'abd','M','10-jun-2011');
+insert into doggg values(1234,'afg','F','09-jul-2012');
+
+select dname,sex,dop
+from doggg d,ownerofdog o
+where d.ssn=o.ssn and o.oname='Abhiman';
+
+select o.oname
+from ownerofdog o
+where not exists( select *
+ from doggg d
+ where o.ssn=d.ssn);
+
+create or replace trigger tr5
+before insert on doggg
+for each row
+declare
+cnt number;
+begin
+select count(*) into cnt from ownerofdog o,doggg d
+ where (o.ssn=d.ssn and o.ssn=:NEW.ssn);
+if(cnt>3) then
+raise_application_error(-20010,'Capacity of the owner crossed');
+end if;
+end;
+
+create or replace procedure pr5(pur_date date)
+is
+X1 dog%rowtype;
+X owner%rowtype;
+cursor c is select o.* from ownerofdog o,doggg d where o.ssn=d.ssn and
+dop=pur_date;
+cursor f is select d.* from ownerofdog o,doggg d where o.ssn=d.ssn and
+dop=pur_date;
+begin
+dbms_output.put_line('OWNER DETAILS');
+for X in c loop
+dbms_output.put_line(X.oname||' '||X.ssn||' '||X.address);
+end loop;
+dbms_output.put_line('DOG DETAILS');
+for X1 in f loop
+dbms_output.put_line(X1.dname||' '||X1.ssn||' '||X1.sex);
+end loop;
+end;
+/
+

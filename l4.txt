@@ -1,0 +1,73 @@
+create table owner2
+(
+ssn number(10),
+name varchar(20),
+address varchar(20),
+constraint pk41 primary key(ssn)
+);
+
+create table car2
+(
+rgno number(10),
+model varchar(10),
+color varchar(10),
+ssn number(10),
+dop date,
+constraint pk42 primary key(rgno),
+constraint fk41 foreign key(ssn) references owner2(ssn)
+);
+
+insert into owner2 values(4441,'josh','sfsdf');
+insert into owner2 values(4442,'john','sfsdf');
+insert into owner2 values(4443,'rose','sfsdf');
+insert into owner2 values(4444,'robert','sfsdf');
+
+insert into car2 values(55551,'dfdf','red',4441,'10-jan-2011');
+insert into car2 values(55552,'xcdf','black',4441,'11-nov-2011');
+insert into car2 values(55553,'dfdfcx','blue',4441,'10-dec-2011');
+insert into car2 values(55554,'asdfdf','white',4442,'10-jul-2011');
+insert into car2 values(55555,'dfasdf','black',4443,'14-feb-2011');
+
+select o.name,c.ssn,count(c.ssn)
+from owner2 o,car2 c
+where o.ssn=c.ssn
+group by o.name,c.ssn
+having count(c.ssn) >=all(select count(m.ssn)
+ from car2 m
+ group by (m.ssn));
+
+select o.ssn,o.name,c.rgno,c.model
+from owner2 o,car2 c
+where c.ssn=o.ssn and dop='11-nov-2011';
+
+create or replace procedure pr4(pur_date date)
+is
+X owner2%rowtype;
+X1 car2%rowtype;
+cursor c is select o.* from owner2 o,car2 c1 where c1.ssn=o.ssn and dop=pur_date;
+cursor f is select c1.* from owner2 o,car2 c1 where c1.ssn=o.ssn and dop=pur_date;
+begin
+sys.dbms_output.put_line('OWNER DETAILS');
+for X in c loop
+sys.dbms_output.put_line(X.name||' '||X.ssn||' '||X.address);
+end loop;
+sys.dbms_output.put_line('CAR DETAILS');
+for X1 in f loop
+sys.dbms_output.put_line(X1.rgno||' '||X1.model||' '||X1.color);
+end loop;
+end;
+/
+
+create or replace trigger tr4
+before insert on car2
+for each row
+declare
+cur date;
+begin
+select sysdate into cur from dual;
+if(cur<:NEW.dop) then
+raise_application_error(-20009,'incorrect date');
+end if;
+end;
+/
+

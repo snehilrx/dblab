@@ -1,0 +1,89 @@
+create table stud1
+(
+usn number(10),
+name varchar(20),
+sem varchar(10),
+constraint pkk primary key(usn)
+);
+
+create table course
+(
+title varchar(20) unique,
+cid number(10),
+credits number(10),
+constraint pk44 primary key(cid)
+);
+
+create table enroll
+(
+usn number(10),
+cid number(10),
+constraint pk54 primary key(usn,cid),
+constraint fk44 foreign key(cid) references course(cid),
+constraint fk54 foreign key(usn) references stud1(usn)
+);
+
+insert into stud1 values(901,7,'josh');
+insert into stud1 values(902,5,'guru');
+insert into stud1 values(903,7,'srini');
+insert into stud1 values(904,3,'turre');
+insert into stud1 values(905,3,'rupa');
+insert into stud1 values(906,5,'piggi');
+insert into stud1 values(NULL,6,'jos');
+insert into course values('dbms',301,4);
+insert into course values('ld',302,5);
+insert into course values('ds',303,4);
+insert into course values('oops',304,4);
+insert into course values('ada',305,3);
+insert into course values('se',306,4);
+insert into course values('cn',307,4);
+insert into enroll values(901,301);
+insert into enroll values(902,301);
+insert into enroll values(903,303);
+insert into enroll values(904,304);
+insert into enroll values(901,302);
+insert into enroll values(901,303);
+insert into enroll values(901,304);
+insert into enroll values(901,305);
+insert into enroll values(903,305);
+insert into enroll values(901,306);
+insert into enroll values(901,307);
+
+select count(s.usn)
+from stud1 s,course c,enroll e
+where s.usn=e.usn and e.cid=c.cid and c.title='dbms';
+
+select s.name
+from stud1 s,course c,enroll e
+where s.usn=e.usn and e.cid=c.cid and c.title='ds'
+minus
+select s.name
+from stud1 s,course c,enroll e
+where s.usn=e.usn and e.cid=c.cid and c.title='ld';
+
+create or replace trigger tr6
+before insert on enroll
+for each row
+declare
+var1 number;
+begin
+select count(*) into var1 from enroll where usn=:new.usn;
+if(var1>6)
+then
+raise_application_error(-20009,'limit reached');
+end if;
+end;
+/
+
+create or replace procedure pr6
+is
+X course%rowtype;
+cursor c is select c1.title from course c1, stud1 s,enroll e where s.usn=e.usn and
+c1.cid=e,cid ans s.sem='7';
+begin
+for X in c loop
+sys.dbms_output.put_line(c.name);
+end loop;
+end;
+/
+
