@@ -1,7 +1,47 @@
+create table customer (
+    cust_id varchar(10),
+    name varchar(10),
+    income number(10),
+    constraint pk81 primary key(cust_id)
+);
+
+create table loan (
+    loan_num number(10),
+    type varchar(10),
+    amount number(10),
+    last_trans date,
+    cust_id varchar(10),
+    constraint pk82 primary key(loan_num),
+    constraint fk81 foreign key (cust_id) references customer(cust_id)
+);
+
+create table address(
+    cust_id varchar(10),
+    street varchar(20),
+    city varchar(20),
+    state varchar(20),
+    constraint pk83 primary key(cust_id, street, city, state),
+    constraint fk82 foreign key(cust_id) references customer(cust_id)
+);
+
+insert into customer values ('c1111', 'alex', 10000);
+insert into customer values ('c1112', 'john', 20000);
+insert into customer values ('c1113', 'steve', 30000);
+insert into customer values ('c1114', 'robert', 40000);
+
+insert into loan values (2001, 'student', 10000, '20-jan-2011', 'c1111');
+insert into loan values (2002, 'personal', 20000, '12-feb-2011','c1111');
+insert into loan values (2003, 'payday', 100000, '13-jan-2011', 'c1112');
+insert into loan values (2004, 'personal', 30000, '20-mar-2011', 'c1114');
+
+insert into address values ('c1111', 'fsfsf', 'ccxx', 'hghg');
+insert into address values ('c1111', 'fsfcc', 'ccqwq', 'hgcxhg');
+
+
 update loans
 set amount=case
-when amount<=50000 then balance*1.12
-else balance*1.14
+when amount<=50000 then amount*1.12
+else amount*1.14
 end;
 
 select c.cname,l.cid,count(l.lno)
