@@ -53,9 +53,7 @@ when balance<=10000 then balance*1.05
 else balance*1.06
 end;
 d)
-select max(distinct(count(acc_no)))
-from account
-group by acc_no;
+select acc_no from cust_acc group by acc_no having count(*) > 3;
 e)
 create or replace trigger last_trans
 before insert on cust_acc
